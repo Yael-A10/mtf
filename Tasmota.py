@@ -1,6 +1,7 @@
 import esptool
 import requests
 import os
+import serial
 
 path = os.path.dirname(os.path.abspath(__file__)) + '/'
 versions = ['tasmota-sensors.bin', 'tasmota.bin', 'tasmota-lite.bin', 'tasmota-minimal.bin']
@@ -52,7 +53,40 @@ def findFile():
         download(versions[int(data)])
         return versions[int(data)]
 
+def findConfigFile():
+    if os.path.exists(path + 'config.txt') and question('Is config.txt your config file?') == 'y':
+        file = open(path + 'config.txt', 'r')
+    else:
+        file = open(path + input('Please enter your file name: '))
+    return file
+
+def findPort():
+    #code from esptool function get_default_connected_device
+    for each_port in reversed(esptool.get_port_list()):
+        print("Serial port %s" % each_port)
+        try:
+            esptool.ESPLoader.detect_chip(each_port, 115200, 'default_reset', False, 3)
+            port = each_port
+            break
+        except (esptool.FatalError, OSError) as err:
+            print("%s failed to connect: %s" % (each_port, err))
+            port = None
+    return port
+
+def configure(file):
+    command = 'Backlog '
+    for x in file:
+        command += x.strip('\n') + '; '
+    command = command[:-2]
+    print(command)
+    port = findPort()
+    if port != None:
+        ser = serial.Serial(port, 115200, timeout=5)
+        #ser.write(b'telemetry 15')
+        print(ser.readline())
+        ser.close()
+
 if question('Do you want to flash') == 'y':
     flash(findFile())
-else:
-    print('i dont want to flash')
+if question('Do you want to configure') == 'y':
+    configure(findConfigFile())
