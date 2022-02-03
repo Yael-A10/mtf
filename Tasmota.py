@@ -1,5 +1,3 @@
-from distutils.command.config import config
-from unittest import result
 import esptool
 import requests
 import os
@@ -82,39 +80,34 @@ def configure(file):
     print('Finished configuring!')
     ser.close()
 
-arguments = sys.argv[1:]
-options = [['-f', '--Flash'],['-c', '--Configure']]
+arguments = ' '.join(sys.argv[1:]).replace('--Flash', '-f').replace('--Configure', '-c').split()
+options = ['-f', '-c']
 results = {'-f': '', '-c': ''}
 for argument in arguments:
     for option in options:
-        if argument == option[0] or argument == option[1]:
+        if argument == option:
             if len(arguments) > arguments.index(argument)+1:
                 if arguments[arguments.index(argument)+1] in ('y', 'n'):
                     options.pop(options.index(option))
-                    answer = arguments[arguments.index(argument)+1]
-                    if argument == option[1]:
-                        argument = option[0]
-                    results[argument] = answer
+                    results[argument] = arguments[arguments.index(argument)+1]
                 elif os.path.exists(arguments[arguments.index(argument)+1]) or os.path.exists(path + arguments[arguments.index(argument)+1]):
                     options.pop(options.index(option))
-                    if argument == option[1]:
-                        argument = option[0]
                     results[argument] = 'y'
                 else:
                     print('Path '+ arguments[arguments.index(argument)+1] + ' or path ' + path + arguments[arguments.index(argument)+1] + ' do not exist, please check your file name.')
                     exit()
 
 if results['-f'] != 'n' and (results ['-f'] == 'y' or question('Do you want to flash') == 'y'):
-    if os.path.exists(arguments[arguments.index('-f')+1]):
+    if len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-f')+1]):
         flash(arguments[arguments.index('-f')+1])
-    elif os.path.exists(path + arguments[arguments.index('-f')+1]):
+    elif len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-f')+1]):
         flash(arguments[path + arguments.index('-f')+1])
     else:
         flash(path + findFile())
 if results['-c'] != 'n' and (results['-c'] == 'y' or question('Do you want to configure') == 'y'):
-    if os.path.exists(arguments[arguments.index('-c')+1]):
+    if len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-c')+1]):
         configure(arguments[arguments.index('-c')+1])
-    elif os.path.exists(path + arguments[arguments.index('-c')+1]):
+    elif len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-c')+1]):
         configure(arguments[path + arguments.index('-c')+1])
     else:
         configure(findConfigFile())
