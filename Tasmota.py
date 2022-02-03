@@ -1,7 +1,10 @@
+from distutils.command.config import config
+from unittest import result
 import esptool
 import requests
 import os
 import serial
+import sys
 
 path = os.path.dirname(os.path.abspath(__file__)) + '/'
 versions = ['tasmota-sensors.bin', 'tasmota.bin', 'tasmota-lite.bin', 'tasmota-minimal.bin']
@@ -13,7 +16,7 @@ def download(file):
 
 def flash(file):
     esptool.main(['erase_flash'])
-    esptool.main(['write_flash', '-fs', '1MB', '-fm', 'dout', '0x0', path + file])
+    esptool.main(['write_flash', '-fs', '1MB', '-fm', 'dout', '0x0', file])
 
 def question(q):
     data = ''
@@ -54,18 +57,17 @@ def findFile():
         return versions[int(data)]
 
 def findConfigFile():
-    if os.path.exists(path + 'config.txt') and question('Is config.txt your config file?') == 'y':
-        file = open(path + 'config.txt', 'r')
+    if os.path.exists(path + 'config.txt'):
+        return open(path + 'config.txt', 'r')
     else:
-        file = open(path + input('Please enter your file name: '), 'r')
-    return file
+        print('Please put your config file named config.txt in this folder (' + path + ')')
+        exit()
 
 def configure(file):
     command = 'Backlog '
     for x in file:
         command += x.strip('\n') + '; '
     command = command[:-2]+'\n'
-    print(command)
     test = esptool.get_default_connected_device(esptool.get_port_list(), None, 7, 115200)
     port = test._port.port
     test._port.close()
@@ -77,10 +79,42 @@ def configure(file):
     char = 0
     while char != b'':
         char = ser.read(1)
-    print('Done!')
+    print('Finished configuring!')
     ser.close()
 
-if question('Do you want to flash') == 'y':
-    flash(findFile())
-if question('Do you want to configure') == 'y':
-    configure(findConfigFile())
+arguments = sys.argv[1:]
+options = [['-f', '--Flash'],['-c', '--Configure']]
+results = {'-f': '', '-c': ''}
+for argument in arguments:
+    for option in options:
+        if argument == option[0] or argument == option[1]:
+            if len(arguments) > arguments.index(argument)+1:
+                if arguments[arguments.index(argument)+1] in ('y', 'n'):
+                    options.pop(options.index(option))
+                    answer = arguments[arguments.index(argument)+1]
+                    if argument == option[1]:
+                        argument = option[0]
+                    results[argument] = answer
+                elif os.path.exists(arguments[arguments.index(argument)+1]) or os.path.exists(path + arguments[arguments.index(argument)+1]):
+                    options.pop(options.index(option))
+                    if argument == option[1]:
+                        argument = option[0]
+                    results[argument] = 'y'
+                else:
+                    print('Path '+ arguments[arguments.index(argument)+1] + ' or path ' + path + arguments[arguments.index(argument)+1] + ' do not exist, please check your file name.')
+                    exit()
+
+if results['-f'] != 'n' and (results ['-f'] == 'y' or question('Do you want to flash') == 'y'):
+    if os.path.exists(arguments[arguments.index('-f')+1]):
+        flash(arguments[arguments.index('-f')+1])
+    elif os.path.exists(path + arguments[arguments.index('-f')+1]):
+        flash(arguments[path + arguments.index('-f')+1])
+    else:
+        flash(findFile())
+if results['-c'] != 'n' and (results['-c'] == 'y' or question('Do you want to configure') == 'y'):
+    if os.path.exists(arguments[arguments.index('-c')+1]):
+        configure(arguments[arguments.index('-c')+1])
+    elif os.path.exists(path + arguments[arguments.index('-c')+1]):
+        configure(arguments[path + arguments.index('-c')+1])
+    else:
+        configure(findConfigFile())
