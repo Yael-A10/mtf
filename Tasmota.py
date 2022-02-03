@@ -110,7 +110,7 @@ if results['-f'] != 'n' and (results ['-f'] == 'y' or question('Do you want to f
     elif os.path.exists(path + arguments[arguments.index('-f')+1]):
         flash(arguments[path + arguments.index('-f')+1])
     else:
-        flash(findFile())
+        flash(path + findFile())
 if results['-c'] != 'n' and (results['-c'] == 'y' or question('Do you want to configure') == 'y'):
     if os.path.exists(arguments[arguments.index('-c')+1]):
         configure(arguments[arguments.index('-c')+1])
