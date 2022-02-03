@@ -37,7 +37,7 @@ def findFile():
                 print(x + ' [' + str(available.index(x)) + ']')
                 availableIndex.append(available.index(x))
             data = '-1'
-            while not data.isnumeric() or int(data) in availableIndex:
+            while not data.isnumeric() or int(data) not in availableIndex:
                 data = input('Which file would you like to use: ')
             return available[int(data)]
         else:
@@ -57,34 +57,28 @@ def findConfigFile():
     if os.path.exists(path + 'config.txt') and question('Is config.txt your config file?') == 'y':
         file = open(path + 'config.txt', 'r')
     else:
-        file = open(path + input('Please enter your file name: '))
+        file = open(path + input('Please enter your file name: '), 'r')
     return file
-
-def findPort():
-    #code from esptool function get_default_connected_device
-    for each_port in reversed(esptool.get_port_list()):
-        print("Serial port %s" % each_port)
-        try:
-            esptool.ESPLoader.detect_chip(each_port, 115200, 'default_reset', False, 3)
-            port = each_port
-            break
-        except (esptool.FatalError, OSError) as err:
-            print("%s failed to connect: %s" % (each_port, err))
-            port = None
-    return port
 
 def configure(file):
     command = 'Backlog '
     for x in file:
         command += x.strip('\n') + '; '
-    command = command[:-2]
+    command = command[:-2]+'\n'
     print(command)
-    port = findPort()
-    if port != None:
-        ser = serial.Serial(port, 115200, timeout=5)
-        #ser.write(b'telemetry 15')
-        print(ser.readline())
-        ser.close()
+    test = esptool.get_default_connected_device(esptool.get_port_list(), None, 7, 115200)
+    port = test._port.port
+    test._port.close()
+    ser = serial.Serial(port, 115200, timeout=1)
+    char = 0
+    while char != b'':
+        char = ser.read(1)
+    ser.write(command.encode())
+    char = 0
+    while char != b'':
+        char = ser.read(1)
+    print('Done!')
+    ser.close()
 
 if question('Do you want to flash') == 'y':
     flash(findFile())
