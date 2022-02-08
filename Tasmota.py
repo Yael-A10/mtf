@@ -1,8 +1,15 @@
+from queue import Empty
+import sys
+import subprocess
+installed = [r.decode().split('==')[0] for r in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']).split()]
+modules = ['esptool', 'requests', 'pyserial']
+for module in modules:
+    if module not in installed:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', module])
 import esptool
 import requests
 import os
 import serial
-import sys
 
 path = os.path.dirname(os.path.abspath(__file__)) + '/'
 versions = ['tasmota-sensors.bin', 'tasmota.bin', 'tasmota-lite.bin', 'tasmota-minimal.bin']
@@ -98,16 +105,16 @@ for argument in arguments:
                     exit()
 
 if results['-f'] != 'n' and (results ['-f'] == 'y' or question('Do you want to flash') == 'y'):
-    if len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-f')+1]):
+    if len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-f')+1]):
         flash(arguments[arguments.index('-f')+1])
-    elif len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-f')+1]):
+    elif len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-f')+1]):
         flash(arguments[path + arguments.index('-f')+1])
     else:
         flash(path + findFile())
 if results['-c'] != 'n' and (results['-c'] == 'y' or question('Do you want to configure') == 'y'):
-    if len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-c')+1]):
+    if len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-c')+1]):
         configure(arguments[arguments.index('-c')+1])
-    elif len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-c')+1]):
+    elif len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-c')+1]):
         configure(arguments[path + arguments.index('-c')+1])
     else:
         configure(findConfigFile())
