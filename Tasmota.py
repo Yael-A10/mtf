@@ -73,17 +73,24 @@ def configure(file):
     for x in file:
         command += x.strip('\n') + '; '
     command = command[:-2]+'\n'
-    test = esptool.get_default_connected_device(esptool.get_port_list(), None, 7, 115200)
+    test = esptool.get_default_connected_device(esptool.get_port_list(), None, 2, 115200)
     port = test._port.port
     test._port.close()
-    ser = serial.Serial(port, 115200, timeout=1)
+    ser = serial.Serial(port, 115200, timeout=3)
+    esptool.main(['read_mac'])
     char = 0
     while char != b'':
         char = ser.read(1)
+        print(char)
+    char = 0
+    while char != b'':
+        char = ser.read(1)
+        print(char)
     ser.write(command.encode())
     char = 0
     while char != b'':
         char = ser.read(1)
+        print(char)
     print('Finished configuring!')
     ser.close()
 
@@ -105,16 +112,16 @@ for argument in arguments:
                     exit()
 
 if results['-f'] != 'n' and (results ['-f'] == 'y' or question('Do you want to flash') == 'y'):
-    if len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-f')+1]):
+    if len(arguments) > 0 and len(arguments) > arguments.index('-f')+1 and os.path.exists(arguments[arguments.index('-f')+1]):
         flash(arguments[arguments.index('-f')+1])
-    elif len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-f')+1]):
-        flash(arguments[path + arguments.index('-f')+1])
+    elif len(arguments) > 0 and len(arguments) > arguments.index('-f')+1 and os.path.exists(path + arguments[arguments.index('-f')+1]):
+        flash(path + arguments[arguments.index('-f')+1])
     else:
         flash(path + findFile())
 if results['-c'] != 'n' and (results['-c'] == 'y' or question('Do you want to configure') == 'y'):
-    if len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(arguments[arguments.index('-c')+1]):
+    if len(arguments) > 0 and len(arguments) > arguments.index('-c')+1 and os.path.exists(arguments[arguments.index('-c')+1]):
         configure(arguments[arguments.index('-c')+1])
-    elif len(arguments) > 0 and len(arguments) > arguments.index(argument)+1 and os.path.exists(path + arguments[arguments.index('-c')+1]):
-        configure(arguments[path + arguments.index('-c')+1])
+    elif len(arguments) > 0 and len(arguments) > arguments.index('-c')+1 and os.path.exists(path + arguments[arguments.index('-c')+1]):
+        configure(path + arguments[arguments.index('-c')+1])
     else:
         configure(findConfigFile())
