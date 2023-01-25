@@ -1,0 +1,8 @@
+add option to config multiple boards at a time by specifying the ports.
+add option to print the ip adress if desired, or to print what is being displayed in serial
+improve config time / config timeout
+
+print ip address once connected to wifi
+check if download was successful
+check if tasmota.minimal.bin still exists on their website
+change access config through folder

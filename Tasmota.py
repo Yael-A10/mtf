@@ -18,6 +18,7 @@ def download(file):
     url = 'http://ota.tasmota.com/tasmota/release/'+file
     r = requests.get(url, allow_redirects=True)
     open(path + file, 'wb').write(r.content)
+    print("\nDownload Successful\n")
 
 def flash(file):
     esptool.main(['erase_flash'])
@@ -57,7 +58,7 @@ def findFile():
             versionIndex.append(versions.index(x))
         data = '-1'
         while not data.isnumeric() or int(data) not in versionIndex:
-            data = input('Which version would you like to use: ')
+            data = input('Which version would you like to download? : ')
         download(versions[int(data)])
         return versions[int(data)]
 
